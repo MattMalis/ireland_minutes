@@ -80,7 +80,7 @@ for yr in seanad_yr_addresses.keys():
 
 
 ## writing csv
-c = open('ireland_single_date_urls.csv', 'wb')
+c = open('seanad_single_date_urls.csv', 'wb')
 c_writer = csv.writer(c)
 c_writer.writerow(["Year", "Month", "Day", "URL"])
 
