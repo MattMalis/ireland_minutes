@@ -37,6 +37,13 @@ for yr in range(1922,2017):
 
 months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September','October', 'November', 'December'] 
 
+## function, takes as args:
+## 		month (string, capitalized)
+## 		text for a single year's main page html,
+## 		base url, for the individual dates' paths to be appended to
+## returns:
+##		dict whose keys are the dates (strings of format 'dd') for which there are legislative minutes,
+##			and values are the URLs for a specific date's minutes
 def find_one_months_addresses(month, yr_text, base_address):
 	date_addresses = {}
 	m_index = yr_text.find(month)
@@ -52,7 +59,10 @@ def find_one_months_addresses(month, yr_text, base_address):
 		date_addresses[dd] = base_address+path
 	return date_addresses
 
-
+## takes a year's main page address, calls on function above, returns a dict of the following form:
+## 		keys: months
+##		values: keys, representing dates for which there are minutes
+##				values: individual date URLs
 def find_date_addresses(yr_address):
 	yr_page = urllib2.urlopen(yr_address)
 	yr_soup = BeautifulSoup(yr_page.read(), "html.parser")
@@ -63,11 +73,13 @@ def find_date_addresses(yr_address):
 		addresses_by_month[m] = this_months_addresses
 	return addresses_by_month
 
+## creating a master dict with all individual date URLs for every year
 all_date_addresses = {}
 for yr in seanad_yr_addresses.keys():
 	all_date_addresses[yr] = find_date_addresses(seanad_yr_addresses[yr])
 
 
+## writing csv
 c = open('ireland_single_date_urls.csv', 'wb')
 c_writer = csv.writer(c)
 c_writer.writerow(["Year", "Month", "Day", "URL"])
