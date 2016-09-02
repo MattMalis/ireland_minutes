@@ -66,6 +66,23 @@ def find_date_addresses(yr_address):
 all_date_addresses = {}
 for yr in seanad_yr_addresses.keys():
 	all_date_addresses[yr] = find_date_addresses(seanad_yr_addresses[yr])
-	
+
+
+c = open('ireland_single_date_urls.csv', 'wb')
+c_writer = csv.writer(c)
+c_writer.writerow(["Year", "Month", "Day", "URL"])
+
+for yr in all_date_addresses.keys():
+	for m in all_date_addresses[yr].keys():
+		if all_date_addresses[yr][m] is None:
+			continue
+		for d in all_date_addresses[yr][m].keys():
+			try:
+				c_writer.writerow([yr, m, d, all_date_addresses[yr][m][d] ])
+			except:
+				print "couldn't write: %s%s%s" %(yr,m,d)
+				
+c.flush()
+c.close()
 
  
