@@ -7,7 +7,9 @@ import csv
 import re
 from bs4 import BeautifulSoup
 
-from ireland_seanad_urls import find_one_months_addresses, find_date_addresses
+##from ireland_seanad_urls import find_one_months_addresses, find_date_addresses
+## tried to import functions from the other python script but wasn't able to for some reason...
+
 
 ## first, trying the same thing that worked for seanad...
 
