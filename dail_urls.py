@@ -7,22 +7,25 @@ import csv
 import re
 from bs4 import BeautifulSoup
 
-##from ireland_seanad_urls import find_one_months_addresses, find_date_addresses
-## tried to import functions from the other python script but wasn't able to for some reason...
 
+seanad_yr_base_address = 'http://oireachtasdebates.oireachtas.ie/debates%20authoring/debateswebpack.nsf/datelist?readform&chamber=seanad&year='
 
-## first, trying the same thing that worked for seanad...
-
-
-dail_yr_base_address = 'http://oireachtasdebates.oireachtas.ie/debates%20authoring/debateswebpack.nsf/datelist?readform&chamber=dail&year='
-
-dail_yr_addresses = {}
+seanad_yr_addresses = {}
 for yr in range(1922,2017):
-	dail_yr_addresses[yr] = dail_yr_base_address + str(yr)
+	seanad_yr_addresses[yr] = seanad_yr_base_address + str(yr)
 	
-	
-months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September','October', 'November', 'December'] 
+## from main year page: all 'opendocument' strings are in a link to a new date's minutes
+## also, looks like every month name appears exactly once (unless there are no minutes from that month, eg august sometimes)
 
+## pattern, on the main year page: 
+## Month
+## href link to individual day address, with path after 'oireachtasdebates.oireachtas.ie', 
+##		followed by >DD<
+## align='"center"
+## next month
+## (four center tags before first month)
+
+months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September','October', 'November', 'December'] 
 
 ## function, takes as args:
 ## 		month (string, capitalized)
@@ -30,7 +33,7 @@ months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'Augus
 ## 		base url, for the individual dates' paths to be appended to
 ## returns:
 ##		dict whose keys are the dates (strings of format 'dd') for which there are legislative minutes,
-##			and values are the URLs for a specific date's minutes
+##			and whose values are the URLs for a specific date's minutes
 def find_one_months_addresses(month, yr_text, base_address):
 	date_addresses = {}
 	m_index = yr_text.find(month)
@@ -43,33 +46,63 @@ def find_one_months_addresses(month, yr_text, base_address):
 		path_end_index = yr_text[path_begin_index:].find('">')
 		path = yr_text[path_begin_index:path_begin_index+path_end_index]
 		dd = yr_text[path_begin_index+path_end_index+2:path_begin_index+path_end_index+4] ## each link ends with >DD<
-		date_addresses[dd] = base_address+path
+		date_addresses[dd] = [base_address+path]
 	return date_addresses
 
 ## takes a year's main page address, calls on function above, returns a dict of the following form:
 ## 		keys: months
 ##		values: keys, representing dates for which there are minutes
 ##				values: individual date URLs
-def find_date_addresses(yr_address):
+def find_one_years_addresses(yr_address):
 	yr_page = urllib2.urlopen(yr_address)
 	yr_soup = BeautifulSoup(yr_page.read(), "html.parser")
 	yr_txt = str(yr_soup)
 	addresses_by_month = {}
 	for m in months:
-		this_months_addresses = find_one_months_addresses(m, yr_txt, 'oireachtasdebates.oireachtas.ie')
+		this_months_addresses = find_one_months_addresses(m, yr_txt, 'http://oireachtasdebates.oireachtas.ie')
 		addresses_by_month[m] = this_months_addresses
 	return addresses_by_month
 
 ## creating a master dict with all individual date URLs for every year
 all_date_addresses = {}
-for yr in dail_yr_addresses.keys():
-	all_date_addresses[yr] = find_date_addresses(dail_yr_addresses[yr])
+for yr in seanad_yr_addresses.keys():
+	try:
+		all_date_addresses[yr] = find_one_years_addresses(seanad_yr_addresses[yr])
+	except:
+		print "Error with find_one_years_addresses() for yr: %s" %(yr)
+		time.sleep(random.uniform(0,5))
+		pass
+
+
+for yr in all_date_addresses.keys():
+	for mo in all_date_addresses[yr].keys():
+		if all_date_addresses[yr][mo] is None:
+			continue
+		for d in all_date_addresses[yr][mo].keys():
+			try:	
+				date_url = all_date_addresses[yr][mo][d][0]
+				date_page = urllib2.urlopen(date_url)
+				date_soup = BeautifulSoup(date_page.read(), "html.parser")
+				date_txt = str(date_soup)
+				select_index = date_txt.find('</select>')
+				print "select_index: %s" %(select_index)
+				num_index = select_index + len('</select> of ')
+				print "num_index: %s" %(num_index)
+				endex = date_txt[num_index:].find('\n')
+				print "endex: %s" %(endex)
+				n_pages = date_txt[num_index:num_index+endex]
+				print "n_pages: %s" %(n_pages)
+				all_date_addresses[yr][mo][d].append(n_pages)
+			except: 
+				print "Error getting page numbers for: %s, %s, %s" %(yr, mo, d)
+				time.sleep(random.uniform(0,5))
+				pass
 
 
 ## writing csv
-c = open('dail_single_date_urls.csv', 'wb')
+c = open('seanad_single_date_urls.csv', 'wb')
 c_writer = csv.writer(c)
-c_writer.writerow(["Year", "Month", "Day", "URL"])
+c_writer.writerow(["Year", "Month", "Day", "URL", "NumPages"])
 
 for yr in all_date_addresses.keys():
 	for m in all_date_addresses[yr].keys():
@@ -77,7 +110,7 @@ for yr in all_date_addresses.keys():
 			continue
 		for d in all_date_addresses[yr][m].keys():
 			try:
-				c_writer.writerow([yr, m, d, all_date_addresses[yr][m][d] ])
+				c_writer.writerow([yr, m, d, all_date_addresses[yr][m][d][0], all_date_addresses[yr][m][d][1] ])
 			except:
 				print "couldn't write: %s%s%s" %(yr,m,d)
 				
