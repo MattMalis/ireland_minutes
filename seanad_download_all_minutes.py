@@ -20,7 +20,7 @@ urls_csv.close()
 ## replace the three digits before '?opendocument' with the appropriate digits to indicate page number
 
 
-def download_page(address,path,filename,wait=.5):
+def download_page(address,path,filename,wait=.1):
 	time.sleep(random.uniform(0,wait))
 	page = urllib2.urlopen(address)
 	page_content = page.read()
@@ -65,7 +65,7 @@ for day in single_days[1:]: #row 0 is the column names
 		try:
 			f_name = 'Ireland-seanad-minutes-%s%s%s-p%s.html'%(day[0],day[1],day[2],pp)
 			p_address = same_date_next_page(day[3], pp, page_num_index_all_urls)
-			download_page(p_address,day_path,f_name,.5)
+			download_page(p_address,day_path,f_name,.1)
 		except:
 			print "ERROR DOWNLOADING %s%s%s, page #%s" %(day[0],day[1],day[2],pp)
 			time.sleep(random.uniform(0,5))

@@ -85,13 +85,13 @@ for yr in all_date_addresses.keys():
 				date_soup = BeautifulSoup(date_page.read(), "html.parser")
 				date_txt = str(date_soup)
 				select_index = date_txt.find('</select>')
-				print "select_index: %s" %(select_index)
+				#print "select_index: %s" %(select_index)
 				num_index = select_index + len('</select> of ')
-				print "num_index: %s" %(num_index)
+				#print "num_index: %s" %(num_index)
 				endex = date_txt[num_index:].find('\n')
-				print "endex: %s" %(endex)
+				#print "endex: %s" %(endex)
 				n_pages = date_txt[num_index:num_index+endex]
-				print "n_pages: %s" %(n_pages)
+				#print "n_pages: %s" %(n_pages)
 				all_date_addresses[yr][mo][d].append(n_pages)
 			except: 
 				print "Error getting page numbers for: %s, %s, %s" %(yr, mo, d)

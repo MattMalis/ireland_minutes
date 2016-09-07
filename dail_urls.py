@@ -7,12 +7,13 @@ import csv
 import re
 from bs4 import BeautifulSoup
 
+## this is an exact copy of seanad_urls.py, just with 'seanad' replaced with 'dail'
 
-seanad_yr_base_address = 'http://oireachtasdebates.oireachtas.ie/debates%20authoring/debateswebpack.nsf/datelist?readform&chamber=seanad&year='
+dail_yr_base_address = 'http://oireachtasdebates.oireachtas.ie/debates%20authoring/debateswebpack.nsf/datelist?readform&chamber=dail&year='
 
-seanad_yr_addresses = {}
+dail_yr_addresses = {}
 for yr in range(1922,2017):
-	seanad_yr_addresses[yr] = seanad_yr_base_address + str(yr)
+	dail_yr_addresses[yr] = dail_yr_base_address + str(yr)
 	
 ## from main year page: all 'opendocument' strings are in a link to a new date's minutes
 ## also, looks like every month name appears exactly once (unless there are no minutes from that month, eg august sometimes)
@@ -65,9 +66,9 @@ def find_one_years_addresses(yr_address):
 
 ## creating a master dict with all individual date URLs for every year
 all_date_addresses = {}
-for yr in seanad_yr_addresses.keys():
+for yr in dail_yr_addresses.keys():
 	try:
-		all_date_addresses[yr] = find_one_years_addresses(seanad_yr_addresses[yr])
+		all_date_addresses[yr] = find_one_years_addresses(dail_yr_addresses[yr])
 	except:
 		print "Error with find_one_years_addresses() for yr: %s" %(yr)
 		time.sleep(random.uniform(0,5))
@@ -85,13 +86,13 @@ for yr in all_date_addresses.keys():
 				date_soup = BeautifulSoup(date_page.read(), "html.parser")
 				date_txt = str(date_soup)
 				select_index = date_txt.find('</select>')
-				print "select_index: %s" %(select_index)
+				#print "select_index: %s" %(select_index)
 				num_index = select_index + len('</select> of ')
-				print "num_index: %s" %(num_index)
+				#print "num_index: %s" %(num_index)
 				endex = date_txt[num_index:].find('\n')
-				print "endex: %s" %(endex)
+				#print "endex: %s" %(endex)
 				n_pages = date_txt[num_index:num_index+endex]
-				print "n_pages: %s" %(n_pages)
+				#print "n_pages: %s" %(n_pages)
 				all_date_addresses[yr][mo][d].append(n_pages)
 			except: 
 				print "Error getting page numbers for: %s, %s, %s" %(yr, mo, d)
@@ -100,7 +101,7 @@ for yr in all_date_addresses.keys():
 
 
 ## writing csv
-c = open('seanad_single_date_urls.csv', 'wb')
+c = open('dail_single_date_urls.csv', 'wb')
 c_writer = csv.writer(c)
 c_writer.writerow(["Year", "Month", "Day", "URL", "NumPages"])
 
