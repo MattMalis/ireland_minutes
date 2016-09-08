@@ -8,6 +8,12 @@ import csv
 import re
 from bs4 import BeautifulSoup
 
+### Run this script after all legislative minutes have already been downloaded,
+##		and are stored as html files in directories of the form 
+##			/Desktop/ireland-seanad-minutes/YYYY/MonthName/DD
+
+print '\n\n\n\n\n\n\n\n'
+
 base_path = '/Users/iramalis/Desktop/ireland-seanad-minutes/'
 
 def import_one_day_htmls(yr, mo, day):
@@ -22,19 +28,23 @@ def import_one_day_htmls(yr, mo, day):
 
 months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September','October', 'November', 'December'] 
 
-c = open('sep12-cur_votes.csv', 'wb')
+c = open('seanad_sep12-cur_votes.csv', 'wb')
 c_writer = csv.writer(c)
 c_writer.writerow(["Year", "Month", "Day", "Vote #", "Ta/Nil","Legislators"])
 
-for yr in range(2012,2017):
+for yr in range(2012,2017): ## newest web format runs from sep2012 through present
 	this_yr_months = os.listdir(base_path+str(yr))
-	for mo in this_yr_months[1:]:
+	for mo in this_yr_months: 
+		if mo == '.DS_Store':
+			continue
 		if yr==2012:
-			if mo not in ['September', 'October', 'November']:#, 'December']:
+			if mo not in ['September', 'October', 'November', 'December']:
 				continue
 		this_months_days = os.listdir(base_path+str(yr)+'/'+mo)
-		for day in this_months_days[1:]:
-			print '\n\n TODAY: %s%s%s' %(yr,mo,day)
+		for day in this_months_days:
+			if day == '.DS_Store':
+				continue
+			print '\n TODAY: %s%s%s' %(yr,mo,day)
 			day_file_names = import_one_day_htmls(yr, mo, day)
 			print '#htmls: %s' %len(day_file_names)
 			one_day_vote_tables = []
@@ -47,15 +57,12 @@ for yr in range(2012,2017):
 						print 'table in a table! day: %s%s%s' %(yr,mo,day)
 						one_day_vote_tables.extend(tables[t].find_all('table'))
 			for i in range(0,len(one_day_vote_tables)):
-				print 'range is: %s' %(range(0,len(one_day_vote_tables)))
 				if (i==0):
 					print 'len(one_day_vote_tables): %s'%(len(one_day_vote_tables))
 				try:
-					#print 'Vote table #%s: length=%s'%(i,len(one_day_vote_tables[i]))
 					vt = one_day_vote_tables[i]
 					ta_vote_tds = vt.find_all('td',{'bgcolor':'#ccffcc'}) 
 					nil_vote_tds = vt.find_all('td',{'bgcolor':'#ffcccc'})			
-					#print '\n TA VOTES:'
 					ta_names = []
 					for row in ta_vote_tds:
 						s_row = str(row)
@@ -64,9 +71,7 @@ for yr in range(2012,2017):
 							continue
 						endex = s_row[begindex:].find('&amp')
 						name = s_row[begindex+len('pid='):begindex+endex]
-						#print name
 						ta_names.append(name)
-					#print '\n\n NIL VOTES:'
 					if len(ta_names)==0:
 						continue
 					ta_vote_info = [yr, mo, day, i, 'TA']
@@ -80,7 +85,6 @@ for yr in range(2012,2017):
 							continue
 						endex = s_row[begindex:].find('&amp')
 						name = s_row[begindex+len('pid='):begindex+endex]
-						#print name
 						nil_names.append(name)
 					if len(nil_names)==0:
 						continue
