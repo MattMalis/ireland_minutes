@@ -1,5 +1,8 @@
 SCRAPE RESULTS 9/8/16
-from seanad_sep12-r_vote_tables.py
+
+The following is the output from running seanad_sep12-cur_vote_tables.py
+
+
 couldn't write non-RC vote record to csv, date: 2012December11
 An Cathaoirleach:Is that agreed?  Agreed.
 couldn't write non-RC vote record to csv, date: 2012December13
