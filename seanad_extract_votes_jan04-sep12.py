@@ -48,7 +48,7 @@ cc_writer.writerow(["Year", "Month", "Day", "File_Name","Subject", "Non-RCV Resu
 
 ####### FUNCTION DEFINITIONS ###########
 
-def ascii_only(original_string): ## wish i knew a better way...
+def ascii_only(original_string):
 	return ''.join([ltr for ltr in original_string if ord(ltr)<128])
 	
 def get_subject(file_soup):
@@ -75,17 +75,27 @@ def get_RC_results(center_p_all):
 			if 'amendment' in pt.lower() or 'question' in pt.lower() or 'declared' in pt.lower():
 				rc_results.append(pt)
 	return rc_results			
-	
-def get_one_file_vote_tables(file_soup):
-		all_tables = file_soup.find_all('table',{'align': 'center'})
-		vote_tables = []
-		for t in all_tables:
-			prev = t.previousSibling.previousSibling
-			prev_text = prev.get_text()
-			if 'seanad' in prev_text.lower() or 'committee' in prev_text.lower() or 'divided' in prev_text.lower():
-				vote_tables.append(t)
-		return vote_tables
+# 	
+# def get_one_file_vote_tables(file_soup):
+# 		all_tables = file_soup.find_all('table',{'align': 'center'})
+# 		vote_tables = []
+# 		for t in all_tables:
+# 			prev = t.previousSibling.previousSibling
+# 			prev_text = prev.get_text()
+# 			if 'seanad' in prev_text.lower() or 'committee' in prev_text.lower() or 'divided' in prev_text.lower():
+# 				vote_tables.append(t)
+# 		return vote_tables
 						
+def get_one_file_vote_tables(file_soup):
+	green_tables = file_soup.find_all('table', {'bgcolor': '#CCFFCC'})
+	for gt in green_tables:
+		bad_td = gt.find_all('td',{'colspan':'2'})
+		all_td = gt.find_all('td')
+		good_td = [t for t in all_td if t not in bad_td]
+		for goods in good_td:
+			print good.get_text()
+	red_tables = file_soup.find_all('table', {'bgcolor': '#FFCCCC'})
+
 def get_legislator_names(list_tds):
 	legislator_names = []
 	for row in list_tds:
@@ -108,15 +118,14 @@ def get_legislator_names(list_tds):
 
 ########## DOING THE WORK ########
 
-for yr in range(2012,2017): ## newest web format runs from sep2012 through present
-#for yr in range(2012,2013):
+for yr in range(2004,2013): ## 2nd newest format: seems to be Jan2004 through July 2012
+#for yr in range(2004,2005):
 	this_yr_months = os.listdir(base_path+str(yr))
 	for mo in this_yr_months: 
 		if mo == '.DS_Store':
 			continue
-		if yr==2012: ## months in 2012 before September follow the old format
-			#if mo not in ['September', 'October']:
-			if mo not in ['September', 'October', 'November', 'December']:
+		if yr==2012: ## months in 2012 after September follow the newest format
+			if mo in ['September', 'October', 'November', 'December']:
 				continue
 		this_months_days = os.listdir(base_path+str(yr)+'/'+mo)
 		## this_months_days is a list of folder names, corresponding to days within a given month for which there are legislative minutes
