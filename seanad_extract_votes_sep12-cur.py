@@ -38,12 +38,12 @@ months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'Augus
 
 c1 = open('seanad_sep12-cur_votes.csv', 'wb')
 c_writer = csv.writer(c1, encoding = 'utf-8')
-c_writer.writerow(["Year", "Month", "Day", "Vote #", "Subject", "Result","Ta/Nil","Tally","Legislators"])
+c_writer.writerow(["Year", "Month", "Day", "Vote_Num", "File_Name","Subject", "Result","Ta/Nil","Tally","Legislators"])
 #c_writer.writerow(["Year", "Month", "Day", "Vote #", "Subject","Ta/Nil","Legislators"])
 
 cc = open('seanad_sep12-cur_nonRC.csv','wb')
 cc_writer = csv.writer(cc, encoding = 'utf-8')
-cc_writer.writerow(["Year", "Month", "Day", "Subject", "Non-RCV Result"])
+cc_writer.writerow(["Year", "Month", "Day", "File_Name","Subject", "Non-RCV Result"])
 
 
 ####### FUNCTION DEFINITIONS ###########
@@ -148,7 +148,7 @@ for yr in range(2012,2017): ## newest web format runs from sep2012 through prese
 					if len(pt)<100:
 						if 'carried' in pt.lower() or 'agreed' in pt.lower() or 'declared' in pt.lower():
 								try:
-									cc_writer.writerow([yr,mo,day,subject,pt])
+									cc_writer.writerow([yr,mo,day,f_name,subject,pt])
 								except:
 									print "NON-RC ERROR: fail to record to csv from filename: %s" %(f_name)
 									print pt
@@ -183,18 +183,13 @@ for yr in range(2012,2017): ## newest web format runs from sep2012 through prese
 						
 						ta_names = get_legislator_names(ta_vote_tds) ## function defined above
 						nil_names = get_legislator_names(nil_vote_tds)
-						
-						#if len(ta_names)==0:
-						#	continue
-						
+											
 						## COLLECT INFO AND WRITE TO CSV
-						ta_vote_info = [yr, mo, day, day_ticker, subject, res, 'TA',len(ta_names)]
+						ta_vote_info = [yr, mo, day, day_ticker, f_name,subject, res, 'TA',len(ta_names)]
 						ta_vote_info.extend(ta_names)
 						c_writer.writerow(ta_vote_info)
 						
-						#if len(nil_names)==0:
-						#	continue
-						nil_vote_info = [yr, mo, day, day_ticker, subject, res, 'NIL',len(nil_names)]
+						nil_vote_info = [yr, mo, day, day_ticker, f_name,subject, res, 'NIL',len(nil_names)]
 						nil_vote_info.extend(nil_names)
 						c_writer.writerow(nil_vote_info)
 					except:
