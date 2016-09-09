@@ -4,14 +4,12 @@ setwd('~/Desktop/gitstuff/ireland_minutes')
 getwd()
 list.files()
 
-rc_full = read.csv('seanad_sep12-cur_votes1.csv', stringsAsFactors = F)
+rc_full = read.csv('seanad_sep12-cur_votes.csv', stringsAsFactors = F)
 names = names(rc_full)
 rc_full = as.matrix(rc_full)
 names(rc_full) = names
 
 rc_no_leg = rc_full[,1:9]
-dim(rc_no_leg)
-head(rc_no_leg)
 
 for (r in 1:nrow(rc_no_leg)){
   if (r%%2==1){
@@ -23,6 +21,7 @@ for (r in 1:nrow(rc_no_leg)){
 
 rc_by_vote = rep(NA,9)
 
+## creating new matrix, where TA and NIL tallies are in same row
 for (r in 1:nrow(rc_no_leg)){
   if (r%%2==1){
     new_row = c(rc_no_leg[r,1:7],rc_no_leg[r,9],rc_no_leg[r+1,9])
@@ -41,9 +40,17 @@ months = c('January', 'February', 'March', 'April', 'May', 'June', 'July', 'Augu
 
 ## adding a column of NAs at the back, to be replaced by numeric month value
 rc_by_vote= cbind( rc_by_vote, rep(NA,nrow(rc_by_vote)))
-for (r in 1:nrow(rc_by_vote)){
-  rc_by_vote[r,ncol(rc_by_vote)]=(which(months==rc_by_vote[r,"Month"],arr.ind=T))
+rc_by_vote= cbind( rc_by_vote, rep(NA,nrow(rc_by_vote))) ## run both lines as written
+
+for (r in 1:nrow(rc_by_vote)) {
+  rc_by_vote[r,ncol(rc_by_vote)-1]=(which(months==rc_by_vote[r,"Month"],arr.ind=T))
+  rc_by_vote[r,ncol(rc_by_vote)] = paste( c(rc_by_vote[r,1],rc_by_vote[r,ncol(rc_by_vote)-1],rc_by_vote[r,3]), collapse = "/")
 }
+colnames(rc_by_vote)[10:11] = c("numeric_month","numeric_date")
 
 
+Number = c(1:nrow(rc_by_vote))
+## number, file_name, date, subject, result, ta_tally, nil_tally
+vote_output = cbind(Number,rc_by_vote[,5],rc_by_vote[,11],rc_by_vote[,6:9])
 
+colnames(vote_output)[2:3] = c("File","Date")
