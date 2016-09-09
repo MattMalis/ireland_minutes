@@ -45,6 +45,9 @@ cc = open('seanad_sep12-cur_nonRC.csv','wb')
 cc_writer = csv.writer(cc, encoding = 'utf-8')
 cc_writer.writerow(["Year", "Month", "Day", "Subject", "Non-RCV Result"])
 
+
+####### FUNCTION DEFINITIONS ###########
+
 def get_subject(file_soup):
 ## looking for subject in the <title> tag
 	titles = file_soup.find_all('title')
@@ -80,9 +83,31 @@ def get_one_file_vote_tables(file_soup):
 			if 'seanad' in prev_text.lower() or 'committee' in prev_text.lower() or 'divided' in prev_text.lower():
 				vote_tables.append(t)
 		return vote_tables
+						
+def get_legislator_names(list_tds):
+	legislator_names = []
+	for row in list_tds:
+		s_row = str(row)
+		## each entry in the vote table includes a name and a link to more info on the legislator
+		##		the names sometimes have non-ascii characters, but the links are always ascii
+		##		in the links, names are found between "pid=" and "&amp"
+		## (note - for side with fewer votes, there will be blank entries at the end of the column)
+		begindex = s_row.find('pid=')
+		if begindex==-1:
+			## this most likely means we hit a blank row
+			continue
+		endex = s_row[begindex:].find('&amp')
+		name = s_row[begindex+len('pid='):begindex+endex]
+		legislator_names.append(name)
+	return legislator_names
+	
+	
+	
 
+########## DOING THE WORK ########
 
-for yr in range(2012,2013): ## newest web format runs from sep2012 through present
+for yr in range(2012,2017): ## newest web format runs from sep2012 through present
+#for yr in range(2012,2013):
 	this_yr_months = os.listdir(base_path+str(yr))
 	for mo in this_yr_months: 
 		if mo == '.DS_Store':
@@ -104,12 +129,14 @@ for yr in range(2012,2013): ## newest web format runs from sep2012 through prese
 				try: ## EXTRACTING VOTE SUBJECT
 					subject = get_subject(soup) ## function defined above
 				except:
+					print 'ERROR: could not extract vote subject for file: %s' %(f_name)
 					subject = ''
 					pass
-				all_p_center = file_soup.find_all('p',{'class':['pcentre']})
+				all_p_center = soup.find_all('p',{'class':['pcentre']})
 				try: ## EXTRACTING RC VOTE RESULTS
 					file_RC_results = get_RC_results(all_p_center)## function defined above
 				except:
+					print 'ERROR: could not extract RC vote results for file: %s' %(f_name)
 					pass
 				## EXTRACTING NON-RC VOTE RESULTS AND WRITING TO CSV
 				##		(easier to do this without creating a function...)
@@ -129,7 +156,9 @@ for yr in range(2012,2013): ## newest web format runs from sep2012 through prese
 				try: ## EXTRACTING VOTE TABLES
 					one_file_vote_tables = get_one_file_vote_tables(soup) ## function defined above
 				except: 
-					print "ERROR: failed to extract vote table from file: %s" %(f_name)
+					## might not actually be an error - might just be that there was a table that wasn't a vote table
+					##		but that happened to have one of the keywords above it
+					print "WARNING: failed to extract vote table from file: %s" %(f_name)
 					pass
 				## EXTRACTING LEGISLATOR VOTES AND WRITING TO CSV
 				for i in range(0,len(one_file_vote_tables)):
@@ -144,36 +173,27 @@ for yr in range(2012,2013): ## newest web format runs from sep2012 through prese
 							else:
 								res = file_RC_results[-1]
 							print 'WARNING: file_RC_results shorter than one_file_vote_tables for filname: %s' %(f_name)
-						else:
+						else: ## this one is what we want
 							res = file_RC_results[i]
 						vt = one_file_vote_tables[i]
+						## table entries for ta and nil votes can be identified by background color
+						## each legislator has her own <td> tag
 						ta_vote_tds = vt.find_all('td',{'bgcolor':'#ccffcc'}) 
-						nil_vote_tds = vt.find_all('td',{'bgcolor':'#ffcccc'})			
-						ta_names = []
-						for row in ta_vote_tds:
-							s_row = str(row)
-							begindex = s_row.find('pid=')
-							if begindex==-1:
-								continue
-							endex = s_row[begindex:].find('&amp')
-							name = s_row[begindex+len('pid='):begindex+endex]
-							ta_names.append(name)
-						if len(ta_names)==0:
-							continue
+						nil_vote_tds = vt.find_all('td',{'bgcolor':'#ffcccc'})										
+						
+						ta_names = get_legislator_names(ta_vote_tds) ## function defined above
+						nil_names = get_legislator_names(nil_vote_tds)
+						
+						#if len(ta_names)==0:
+						#	continue
+						
+						## COLLECT INFO AND WRITE TO CSV
 						ta_vote_info = [yr, mo, day, day_ticker, subject, res, 'TA',len(ta_names)]
 						ta_vote_info.extend(ta_names)
 						c_writer.writerow(ta_vote_info)
-						nil_names = []
-						for row in nil_vote_tds:
-							s_row = row.encode()
-							begindex = s_row.find('pid=')
-							if begindex==-1:
-								continue
-							endex = s_row[begindex:].find('&amp')
-							name = s_row[begindex+len('pid='):begindex+endex]
-							nil_names.append(name)
-						if len(nil_names)==0:
-							continue
+						
+						#if len(nil_names)==0:
+						#	continue
 						nil_vote_info = [yr, mo, day, day_ticker, subject, res, 'NIL',len(nil_names)]
 						nil_vote_info.extend(nil_names)
 						c_writer.writerow(nil_vote_info)
