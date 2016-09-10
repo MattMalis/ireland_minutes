@@ -63,6 +63,15 @@ def get_subject(file_soup):
 		if begindex!=-1:
 			subj = t_txt[begindex:]
 	return subj
+
+def get_RC_result(red_table):
+	keywords = ['amendment', 'question','declared']
+	cur = red_table.nextSibling
+	if cur.name=='p':
+		for k in keywords:
+			if k in cur.get_text():
+				return ascii_only(cur.get_text())
+	get_RC_result(cur.nextSibling)
 	
 def get_RC_results(center_p_all):
 	## results of RC votes - always found in <p> tag with 'class="pcentre"' attribute

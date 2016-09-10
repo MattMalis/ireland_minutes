@@ -63,6 +63,22 @@ def get_subject(file_soup):
 		if begindex!=-1:
 			subj = t_txt[begindex:]
 	return subj
+
+def get_one_RC_result(red_table):
+	keywords = ['amendment', 'question','declared']
+	cur = red_table.nextSibling
+	while(True):
+		try:
+			if cur.name=='table':
+				return ''
+			if cur.name=='p':
+				for k in keywords:
+					if k in cur.get_text().lower():
+						return ascii_only(cur.get_text())
+			cur = cur.nextSibling
+		except:
+			cur = cur.nextSibling
+				
 	
 def get_RC_results(center_p_all):
 	## results of RC votes - always found in <p> tag with 'class="pcentre"' attribute
@@ -75,27 +91,6 @@ def get_RC_results(center_p_all):
 			if 'amendment' in pt.lower() or 'question' in pt.lower() or 'declared' in pt.lower():
 				rc_results.append(pt)
 	return rc_results			
-# 	
-# def get_one_file_vote_tables(file_soup):
-# 		all_tables = file_soup.find_all('table',{'align': 'center'})
-# 		vote_tables = []
-# 		for t in all_tables:
-# 			prev = t.previousSibling.previousSibling
-# 			prev_text = prev.get_text()
-# 			if 'seanad' in prev_text.lower() or 'committee' in prev_text.lower() or 'divided' in prev_text.lower():
-# 				vote_tables.append(t)
-# 		return vote_tables
-# 						
-# def get_one_file_vote_tables(file_soup):
-# 	green_tables = file_soup.find_all('table', {'bgcolor': '#CCFFCC'})
-# 	for gt in green_tables:
-# 		bad_td = gt.find_all('td',{'colspan':'2'})
-# 		all_td = gt.find_all('td')
-# 		good_td = [t for t in all_td if t not in bad_td]
-# 		for goods in good_td:
-# 			print good.get_text()
-# 	red_tables = file_soup.find_all('table', {'bgcolor': '#FFCCCC'})
-
 
 def legislator_names_from_table(vote_table):
 	legislator_names = []
@@ -147,27 +142,27 @@ for yr in range(2004,2005):
 					print 'ERROR: could not extract vote subject for file: %s' %(f_name)
 					subject = ''
 					pass
-				all_p_center = soup.find_all('p',{'class':['pcentre']})
-				try: ## EXTRACTING RC VOTE RESULTS
-					file_RC_results = get_RC_results(all_p_center)## function defined above
-				except:
-					print 'ERROR: could not extract RC vote results for file: %s' %(f_name)
-					pass
+				# all_p_center = soup.find_all('p',{'class':['pcentre']})
+# 				try: ## EXTRACTING RC VOTE RESULTS
+# 					file_RC_results = get_RC_results(all_p_center)## function defined above
+# 				except:
+# 					print 'ERROR: could not extract RC vote results for file: %s' %(f_name)
+# 					pass
 				## EXTRACTING NON-RC VOTE RESULTS AND WRITING TO CSV
 				##		(easier to do this without creating a function...)
-				all_p = soup.find_all('p')
-				## looking at the <p> tags that do not have the attributes described above
-				p_not_center = [p for p in all_p if p not in all_p_center]
-				for p in p_not_center:
-					pt = ''.join([c for c in p.get_text() if ord(c)<128])
-					if len(pt)<100:
-						if 'carried' in pt.lower() or 'agreed' in pt.lower() or 'declared' in pt.lower():
-								try:
-									cc_writer.writerow([yr,mo,day,f_name,subject,pt])
-								except:
-									print "NON-RC ERROR: fail to record to csv from filename: %s" %(f_name)
-									print pt
-									pass
+				# all_p = soup.find_all('p')
+# 				## looking at the <p> tags that do not have the attributes described above
+# 				p_not_center = [p for p in all_p if p not in all_p_center]
+# 				for p in p_not_center:
+# 					pt = ''.join([c for c in p.get_text() if ord(c)<128])
+# 					if len(pt)<100:
+# 						if 'carried' in pt.lower() or 'agreed' in pt.lower() or 'declared' in pt.lower():
+# 								try:
+# 									cc_writer.writerow([yr,mo,day,f_name,subject,pt])
+# 								except:
+# 									print "NON-RC ERROR: fail to record to csv from filename: %s" %(f_name)
+# 									print pt
+# 									pass
 				#try: ## EXTRACTING VOTE TABLES
 			#		one_file_vote_tables = get_one_file_vote_tables(soup) ## function defined above
 			#	except: 
@@ -180,7 +175,7 @@ for yr in range(2004,2005):
 				green_tables = soup.find_all('table', {'bgcolor': '#CCFFCC'})
 				red_tables = soup.find_all('table', {'bgcolor': '#FFCCCC'})
 				if len(green_tables)!=len(red_tables):
-					print "ERROR: unequal amount of green tables and red tables for file: %s" %(f_name)
+					print "ERROR: unequal number of green tables and red tables for file: %s" %(f_name)
 					continue
 					
 				## EXTRACTING LEGISLATOR VOTES AND WRITING TO CSV
@@ -190,14 +185,14 @@ for yr in range(2004,2005):
 						## length of file_RC_results should be same as length of one_file_vote_tables
 						## 		(one vote result listed below each vote table)
 						## 		if it's not, something went wrong
-						if len(file_RC_results)<=i:
-							if len(file_RC_results)==0:
-								res = ['']
-							else:
-								res = file_RC_results[-1]
-							print 'WARNING: file_RC_results shorter than one_file_vote_tables for filname: %s' %(f_name)
-						else: ## this one is what we want
-							res = file_RC_results[i]
+						# if len(file_RC_results)<=i:
+# 							if len(file_RC_results)==0:
+# 								res = ['']
+# 							else:
+# 								res = file_RC_results[-1]
+# 							print 'WARNING: file_RC_results shorter than one_file_vote_tables for filname: %s' %(f_name)
+# 						else: ## this one is what we want
+# 							res = file_RC_results[i]
 						#vt = one_file_vote_tables[i]
 						
 						## table entries for ta and nil votes can be identified by background color
@@ -205,8 +200,11 @@ for yr in range(2004,2005):
 						
 						#ta_vote_tds = vt.find_all('td',{'bgcolor':'#ccffcc'}) 
 						#nil_vote_tds = vt.find_all('td',{'bgcolor':'#ffcccc'})										
-						
-						
+						res = ''
+						res = get_one_RC_result(red_tables[i])
+						print res
+						if res=='':
+							print "WARNING: did not find result for table#%s from file: %s" %(i,f_name)
 						ta_names = legislator_names_from_table(green_tables[i]) ## function defined above
 						nil_names = legislator_names_from_table(red_tables[i])
 											
