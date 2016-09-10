@@ -11,6 +11,11 @@ import re
 from bs4 import BeautifulSoup as BS
 import codecs
 
+### Got one error message from running this script:
+## "ERROR: writing csv for table#0 from file: Ireland-seanad-minutes-2008April30-p8.html"
+
+
+
 ### Run this script after all legislative minutes have already been downloaded,
 ##		and are stored as html files in directories of the form 
 ##			/Desktop/ireland-seanad-minutes/YYYY/MonthName/DD
@@ -72,27 +77,14 @@ def get_one_RC_result(red_table):
 			if cur.name=='table':
 				return ''
 			if cur.name=='p':
-				for k in keywords:
-					if k in cur.get_text().lower():
-						return ascii_only(cur.get_text())
+				if any(k in cur.get_text().lower() for k in keywords):
+					return ascii_only(cur.get_text())
 			cur = cur.nextSibling
 		except:
 			cur = cur.nextSibling
 				
-	
-def get_RC_results(center_p_all):
-	## results of RC votes - always found in <p> tag with 'class="pcentre"' attribute
-	rc_results = []
-	for p in center_p_all:
-		pt = ascii_only(p.get_text())
-		## don't want to catch long blocks of speeches that happen to include the keywords below
-		## (100 char cutoff is arbitrary...)
-		if len(pt)<100:
-			if 'amendment' in pt.lower() or 'question' in pt.lower() or 'declared' in pt.lower():
-				rc_results.append(pt)
-	return rc_results			
 
-def legislator_names_from_table(vote_table):
+def legislator_names_from_table(vote_table): ## using this function for both the green (ta) tables and red (nil) tables
 	legislator_names = []
 	bad_td = vote_table.find_all('td',{'colspan':'2'})
 	all_td = vote_table.find_all('td')
@@ -102,7 +94,7 @@ def legislator_names_from_table(vote_table):
 		## each entry in the vote table includes a name and a link to more info on the legislator
 		##		the names sometimes have non-ascii characters, but the links are always ascii
 		##		in the links, names are found between "pid=" and "&amp"
-		## (note - for side with fewer votes, there will be blank entries at the end of the column)
+		## (note - if table has uneven number of votes, there will be blank entries at the end of the column)
 		begindex = s_row.find('pid=')
 		if begindex==-1:
 			## this most likely means we hit a blank row
@@ -111,16 +103,15 @@ def legislator_names_from_table(vote_table):
 		name = s_row[begindex+len('pid='):begindex+endex]
 		legislator_names.append(name)
 	return legislator_names
-	
-	
-	
+
+
 
 ########## DOING THE WORK ########
 
-#for yr in range(2004,2013): ## 2nd newest format: seems to be Jan2004 through July 2012
-for yr in range(2004,2005):
+for yr in range(2004,2013): ## 2nd newest format: seems to be Jan2004 through July 2012
+#for yr in range(2004,2005):
 	this_yr_months = os.listdir(base_path+str(yr))
-	for mo in ['January','February']:#this_yr_months: 
+	for mo in this_yr_months: 
 		if mo == '.DS_Store':
 			continue
 		if yr==2012: ## months in 2012 after September follow the newest format
@@ -142,69 +133,28 @@ for yr in range(2004,2005):
 					print 'ERROR: could not extract vote subject for file: %s' %(f_name)
 					subject = ''
 					pass
-				# all_p_center = soup.find_all('p',{'class':['pcentre']})
-# 				try: ## EXTRACTING RC VOTE RESULTS
-# 					file_RC_results = get_RC_results(all_p_center)## function defined above
-# 				except:
-# 					print 'ERROR: could not extract RC vote results for file: %s' %(f_name)
-# 					pass
-				## EXTRACTING NON-RC VOTE RESULTS AND WRITING TO CSV
-				##		(easier to do this without creating a function...)
-				# all_p = soup.find_all('p')
-# 				## looking at the <p> tags that do not have the attributes described above
-# 				p_not_center = [p for p in all_p if p not in all_p_center]
-# 				for p in p_not_center:
-# 					pt = ''.join([c for c in p.get_text() if ord(c)<128])
-# 					if len(pt)<100:
-# 						if 'carried' in pt.lower() or 'agreed' in pt.lower() or 'declared' in pt.lower():
-# 								try:
-# 									cc_writer.writerow([yr,mo,day,f_name,subject,pt])
-# 								except:
-# 									print "NON-RC ERROR: fail to record to csv from filename: %s" %(f_name)
-# 									print pt
-# 									pass
-				#try: ## EXTRACTING VOTE TABLES
-			#		one_file_vote_tables = get_one_file_vote_tables(soup) ## function defined above
-			#	except: 
-					## might not actually be an error - might just be that there was a table that wasn't a vote table
-					##		but that happened to have one of the keywords above it
-			#		print "WARNING: failed to extract vote table from file: %s" %(f_name)
-			#		pass
 			
-			
+				## grabbing the green and red RC vote result tables
 				green_tables = soup.find_all('table', {'bgcolor': '#CCFFCC'})
 				red_tables = soup.find_all('table', {'bgcolor': '#FFCCCC'})
 				if len(green_tables)!=len(red_tables):
 					print "ERROR: unequal number of green tables and red tables for file: %s" %(f_name)
 					continue
-					
+				
+				this_file_RC_results = []	
+				
 				## EXTRACTING LEGISLATOR VOTES AND WRITING TO CSV
 				for i in range(len(green_tables)):
 					try:
 						day_ticker+=1
-						## length of file_RC_results should be same as length of one_file_vote_tables
-						## 		(one vote result listed below each vote table)
-						## 		if it's not, something went wrong
-						# if len(file_RC_results)<=i:
-# 							if len(file_RC_results)==0:
-# 								res = ['']
-# 							else:
-# 								res = file_RC_results[-1]
-# 							print 'WARNING: file_RC_results shorter than one_file_vote_tables for filname: %s' %(f_name)
-# 						else: ## this one is what we want
-# 							res = file_RC_results[i]
-						#vt = one_file_vote_tables[i]
-						
-						## table entries for ta and nil votes can be identified by background color
-						## each legislator has her own <td> tag
-						
-						#ta_vote_tds = vt.find_all('td',{'bgcolor':'#ccffcc'}) 
-						#nil_vote_tds = vt.find_all('td',{'bgcolor':'#ffcccc'})										
+														
 						res = ''
-						res = get_one_RC_result(red_tables[i])
-						print res
+						res = get_one_RC_result(red_tables[i]) ## function defined above
 						if res=='':
 							print "WARNING: did not find result for table#%s from file: %s" %(i,f_name)
+						else:
+							this_file_RC_results.append(res)
+						## extracting legislator names from both vote tables
 						ta_names = legislator_names_from_table(green_tables[i]) ## function defined above
 						nil_names = legislator_names_from_table(red_tables[i])
 											
@@ -217,9 +167,35 @@ for yr in range(2004,2005):
 						nil_vote_info.extend(nil_names)
 						c_writer.writerow(nil_vote_info)
 					except:
-						#print 'ERROR: %s%s%s #%s' %(yr,mo,day,day_ticker)
 						print 'ERROR: writing csv for table#%s from file: %s' %(i, f_name)
 						pass
+				
+				## All non-RC vote results seem to be listed in short <p> tags
+				## RC results have been stored in this_file_RC_results
+				## finding all the <p> tags that meet certain criteria (below),
+				## 		that are not found in this_file_RC_results
+				all_p = soup.find_all('p')
+				all_p_not_RC = [p for p in all_p if p not in this_file_RC_results]
+				nonRC_results = []
+				for p in all_p_not_RC:
+					try:
+						pt = ascii_only(p.get_text())
+						keywords = ['amendment','question','declared','agreed']
+						if len(pt)<100:
+							if any(k in pt.lower() for k in keywords):
+								nonRC_results.append(pt)
+					except:
+						print 'ERROR extracting nonRC_results for file: %s' %(f_name)
+						pass
+				## writing each of the stored non-RC results to its own line in the non-RC csv file
+				for r in nonRC_results:
+					try:
+						cc_writer.writerow([yr,mo,day,f_name,subject,r])
+					except:
+						print 'ERROR writing nonRC to csv for file: %s' %(f_name)
+						pass			
+				
+				
 
 c1.flush()
 c1.close()
