@@ -41,10 +41,18 @@ def one_day_html_filenames(yr, mo, day):
 
 months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September','October', 'November', 'December'] 
 
+
+legis_names = []
+for i in range(55):
+	next_legis_name = "Legislator%s"%(i)
+	legis_names.append(next_legis_name)
+
 c1 = open('seanad_jan04-sep12_votes_orig.csv', 'wb')
+
 c_writer = csv.writer(c1, encoding = 'utf-8')
-c_writer.writerow(["Year", "Month", "Day", "Vote_Num", "File_Name","Subject", "Result","Ta/Nil","Tally","Legislators"])
-#c_writer.writerow(["Year", "Month", "Day", "Vote #", "Subject","Ta/Nil","Legislators"])
+colnames = ["Year", "Month", "Day", "Vote_Num", "File_Name","Subject", "Result","Ta/Nil","Tally"]
+colnames.extend(legis_names)
+c_writer.writerow(colnames)
 
 cc = open('seanad_jan04-sep12_nonRC_orig.csv','wb')
 cc_writer = csv.writer(cc, encoding = 'utf-8')

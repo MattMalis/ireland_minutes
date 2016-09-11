@@ -1,0 +1,49 @@
+File name formats:
+
+
+------
+[house]_urls.py :
+
+Python script that collects all URLs for each date for which there are legislative minutes, and finds how many
+	separate pages there are for each day's minutes
+	
+Outputs those URLs to a csv with yr, month, day, url, #pages
+
+______
+[house]_single_date_urls.csv :
+
+output from python script above
+
+
+______
+[house]_download_all_minutes.py :
+
+Python script that refers to [house]_single_date_urls.csv and downloads all legislative minute HTML files,
+	saving them to a folder in the path /Desktop/ireland-[house]-minutes/Year/Month/DD/
+
+------
+[house]_extract_votes_[date range].py : 
+
+Python script for extracting vote records from HTML files and outputting to CSV files
+
+(Note: for two most recent Seanad csv's I manually added column names for each legislator 
+	ie. "Legislator1, Legislator2, ... Legislator 55" --but I have since added this in to the python script)
+
+
+-----
+[house]_[date range]_votes_orig.csv and [house]_[date range]_nonRC.csv :
+
+outputs from python script above
+
+
+-----
+[house]_votes_re-format.R :
+
+R script for re-formatting the csv output (above), removes legislator names, puts "ta" and "nil" tallies on same row,
+	reduces date to single column with format YYYY/MM/DD, outputs a new re-formatted CSV
+	
+_____
+Ireland[House][DateRange]-Votes.csv :
+
+output from R script above
+
