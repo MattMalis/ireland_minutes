@@ -38,8 +38,8 @@ def one_day_html_filenames(yr, mo, day):
 		print 'ERROR in one_day_html_filenames(%s, %s, %s)'%(yr,mo,day)
 		pass
 
-
-months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September','October', 'November', 'December'] 
+months = ['January', 'October']
+#months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September','October', 'November', 'December'] 
 
 
 legis_names = []
@@ -145,10 +145,14 @@ def get_one_RC_result(vote_table):
 
 ########## DOING THE WORK ########
 
-#for yr in range(1924,2004): ## all files 1924-2004 appear to share same format
-for yr in range(2003,2004):
+for yr in range(1924,2004): ## all files 1924-2004 appear to share same format
+#for yr in range(2003,2004):
+	if yr==1937:
+		continue
 	this_yr_months = os.listdir(base_path+str(yr))
 	for mo in this_yr_months: 
+		if mo not in months:
+			continue
 		if mo == '.DS_Store':
 			continue
 		this_months_days = os.listdir(base_path+str(yr)+'/'+mo)
@@ -214,7 +218,7 @@ for yr in range(2003,2004):
 							res = get_one_RC_result(vote_tables[j])
 							j+=1
 						
-						
+						names = [n for n in names if n!='' and n!='_']
 						
 					
 						## COLLECT INFO AND WRITE TO CSV
