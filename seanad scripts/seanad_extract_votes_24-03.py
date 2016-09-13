@@ -38,7 +38,6 @@ def one_day_html_filenames(yr, mo, day):
 		print 'ERROR in one_day_html_filenames(%s, %s, %s)'%(yr,mo,day)
 		pass
 
-#months = ['March', 'September']
 months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September','October', 'November', 'December'] 
 
 
@@ -70,9 +69,7 @@ def ascii_only(original_string):
 			else:
 				letrs.append('_')
 		return ''.join(letrs)
-		#return ''.join([ltr for ltr in original_string if ord(ltr)<128])
 	except:
-		#print 'unable to ascii-fy %s'%(original_string)
 		return ''
 	
 def get_subject(file_soup):
@@ -95,38 +92,25 @@ def find_vote_tables(file_soup):
 	## some files are formatted with an outer table that contains a large part of the table's contents...
 	## 		(want to skip those tables)
 	return vote_tables
-# 
-# for i in range(len(vt1)):
-# 	print 'starting on table #%s'%(i)
-# 	outcome = ta_or_nil(vt1[i])
-# 	if outcome=='NONE':
-# 		continue
-# 	else:
-# 		print vt1[i]
 	
+		
 def ta_or_nil(vote_table):
 	cur = vote_table.previousSibling
 	count = 0
 	while (True):
-		#print 'count: %s' %(count)
-		#print 'cur: %s \n\n' %(cur)
 		if count>3 or cur==None:
 			return 'NONE'
 		if cur.name==None:
-			#print 'name for %s is none' %(count)
 			count+=1
 			cur = cur.previousSibling
-		elif cur.name=='p' and len(cur.get_text())<100:
+		elif cur.name=='p' and len(cur.get_text())<50:
 			if 'T_' in ascii_only(cur.get_text()):	
-				#print 'got a ta!'
 				return 'TA'
 			if 'N_l' in ascii_only(cur.get_text()):
-				#print 'got a nil!'
 				return 'NIL'
 			cur = cur.previousSibling
 			count +=1
 		else:
-			#print 'else'
 			cur = cur.previousSibling
 			count +=1
 		
@@ -140,14 +124,25 @@ def get_legislator_names(vote_table):
 		legislator_names.extend(names)
 	return legislator_names
 
-def get_one_RC_result(vote_table):
+## some files have their result statement in a <td> tag, instead of a <p> tag...
+def catch_result_tds(file_soup):
+	all_tds = file_soup.find_all('td')
+	keywords = ['amendment', 'motion','question','declared', 'ordered']
+	result_tds = []
+	for td in all_tds:
+		if len(td.get_text())<200 and any(k in td.get_text().lower() for k in keywords):
+			result_tds.append(td)
+	return result_tds
+			
+## find the Result statment ofr an RC vote immediately following a vote table
+## 		need to also refer to a list of <td> tage which might contain those results statements...	
+def get_one_RC_result(vote_table, result_tds):
 	keywords = ['amendment', 'motion','question','declared', 'ordered']
 	cur = vote_table.nextSibling
 	count = 0
 	while(True):
 		try:
-			#print 'count: %s' %(count)
-			if count >10:
+			if count >20:
 				return ''
 			if cur is None:
 				return ''
@@ -158,14 +153,15 @@ def get_one_RC_result(vote_table):
  				## moving through siblings, if you hit a table before a result <p>, that means you started with a ta table
  				## 		(or with a nil table before a [nil, continued] table)
  				return ''
-			elif cur.name=='p' and len(cur.get_text())<100:
+			elif cur.name=='p' and len(cur.get_text())<200:
 				if any(k in cur.get_text().lower() for k in keywords):
 					return ascii_only(cur.get_text())
 				else:
 					count+=1
 					cur = cur.nextSibling
+			elif cur in result_tds:
+				return ascii_only(cur.get_text())
 			else:
-				#print 'cur.name: %s' %(cur.name)
 				count +=1
 				cur = cur.nextSibling
 		except:
@@ -216,25 +212,43 @@ for yr in range(1930,2004):
 					pass
 				
 				this_file_RC_results = []	
+				try:
+					this_file_result_tds = catch_result_tds(soup)
+				except:
+					print "failed to catch result_tds for file: %s" %(f_name)
+					this_file_result_tds = []
+
 				
 				## EXTRACTING LEGISLATOR VOTES AND WRITING TO CSV
 				for i in range(len(vote_tables)):
 					try:
 						
 						##workaround for the fact that some tables are split... (eg 'ta' and 'ta,continued')
-						outcome = ta_or_nil(vote_tables[i])
+						try:
+							outcome = ta_or_nil(vote_tables[i])
+						except:
+							print 'failed to get outcome for table # %s for file: %s' %(i, f_name)
+							outcome==None
+							
 						if outcome=='NONE': ## it wasn't actually a vote table
 							continue
 							
 						next_outcome = '...'
 						if i+1<len(vote_tables):
 							next_outcome = ta_or_nil(vote_tables[i+1])
-							
-						names = get_legislator_names(vote_tables[i]) ## function defined above
-						#print 'names for file %s: \n %s' %(f_name, names)					
-						res = get_one_RC_result(vote_tables[i]) ## function defined above
+						
+						try:			
+							names = get_legislator_names(vote_tables[i]) ## function defined above
+						except:
+							print 'failed to get legislator names for table # %s for file: %s' %(i, f_name)
+							name=[]
+						
+						try:
+							res = get_one_RC_result(vote_tables[i],this_file_result_tds) ## function defined above
 							## get_one_RC_result returns '' if it hits another table before it finds a result
-						#print 'res:   %s   for file:  %s' %(res,f_name)
+						except:
+							print 'failed to get RC result for table # %s for file: %s' %(i, f_name)
+							res = ''
 
 						if outcome==next_outcome: #if there are two nil or two ta tables back-to-back
 							print 'hit a continued table in file: %s'%(f_name)	
@@ -257,12 +271,15 @@ for yr in range(1930,2004):
 						j=i
 						## if this vote table does not immediate precede a result, 
 						##		scan forward until you find a result, and make it this vote table's result
-						while (res==''):
-							if j>=len(vote_tables):
-								break
-							res = get_one_RC_result(vote_tables[j])
-							j+=1
-						
+						try:
+							while (res==''):
+								if j>=len(vote_tables):
+									break
+								res = get_one_RC_result(vote_tables[j],this_file_result_tds)
+								j+=1
+						except:
+							print 'failed to get next vote result for table # %s for file: %s' %(i,f_name)
+							
 						names = [n for n in names if n!='' and n!='_']
 						
 					
