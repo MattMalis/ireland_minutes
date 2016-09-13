@@ -38,7 +38,7 @@ def one_day_html_filenames(yr, mo, day):
 		print 'ERROR in one_day_html_filenames(%s, %s, %s)'%(yr,mo,day)
 		pass
 
-months = ['January', 'October']
+months = ['March', 'September']
 #months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September','October', 'November', 'December'] 
 
 
@@ -95,14 +95,28 @@ def find_vote_tables(file_soup):
 	## some files are formatted with an outer table that contains a large part of the table's contents...
 	## 		(want to skip those tables)
 	return vote_tables
+# 
+# for i in range(len(vt1)):
+# 	print 'starting on table #%s'%(i)
+# 	outcome = ta_or_nil(vt1[i])
+# 	if outcome=='NONE':
+# 		continue
+# 	else:
+# 		print vt1[i]
 	
 def ta_or_nil(vote_table):
 	cur = vote_table.previousSibling
 	count = 0
 	while (True):
-		if count>5:
+		#print 'count: %s' %(count)
+		#print 'cur: %s \n\n' %(cur)
+		if count>3 or cur==None:
 			return 'NONE'
-		if cur.name=='p' and len(cur.get_text())<100:
+		if cur.name==None:
+			#print 'name for %s is none' %(count)
+			count+=1
+			cur = cur.previousSibling
+		elif cur.name=='p' and len(cur.get_text())<100:
 			if 'T_' in ascii_only(cur.get_text()):	
 				#print 'got a ta!'
 				return 'TA'
@@ -112,11 +126,28 @@ def ta_or_nil(vote_table):
 			cur = cur.previousSibling
 			count +=1
 		else:
-			#print 'previous sibling'
-			#time.sleep(.5)
+			#print 'else'
 			cur = cur.previousSibling
 			count +=1
 		
+		
+		
+		
+		
+	# 	
+# 		
+# for i in range(len(vt1)):
+# 	print 'starting on table #%s'%(i)
+# 	outcome = ta_or_nil(vt1[i])
+# 	if outcome=='NONE':
+# 		continue
+# 	else:
+# 		print vt1[i]
+# 	
+	
+	
+	
+	
 def get_legislator_names(vote_table):
 	tds = vote_table.find_all('td')
 	legislator_names = []
@@ -126,19 +157,25 @@ def get_legislator_names(vote_table):
 	return legislator_names
 
 def get_one_RC_result(vote_table):
-	keywords = ['amendment', 'motion','question','declared']
+	keywords = ['amendment', 'motion','question','declared', 'ordered']
 	cur = vote_table.nextSibling
 	while(True):
 		try:
- 			if cur.name=='table': 
+			if cur is None:
+				return ''
+			if cur.name==None:
+				cur = cur.nextSibling
+ 			elif cur.name=='table': 
  				## moving through siblings, if you hit a table before a result <p>, that means you started with a ta table
  				## 		(or with a nil table before a [nil, continued] table)
  				return ''
-			if cur.name=='p' and len(cur.get_text())<100:
+			elif cur.name=='p' and len(cur.get_text())<100:
 				if any(k in cur.get_text().lower() for k in keywords):
 					return ascii_only(cur.get_text())
 			cur = cur.nextSibling
 		except:
+			if cur is None:
+				return ''
 			cur = cur.nextSibling
 
 
@@ -147,7 +184,7 @@ def get_one_RC_result(vote_table):
 
 for yr in range(1924,2004): ## all files 1924-2004 appear to share same format
 #for yr in range(2003,2004):
-	if yr==1937:
+	if yr==1937:## no minutes found online for 1937
 		continue
 	this_yr_months = os.listdir(base_path+str(yr))
 	for mo in this_yr_months: 
@@ -208,10 +245,16 @@ for yr in range(1924,2004): ## all files 1924-2004 appear to share same format
 							if res=='':
 								print "WARNING: did not find result for table#%s from file: %s" %(i,f_name)
 						
+						## storing RC results in a list, to refer to later when extracting non-RC results
+						## 		
 						if res!='':
 							this_file_RC_results.append(res)
-						
+						## NOTE: this is faulty - "Question declared carried" can exist in the file both as an RC result and
+						## 		a non-RC result; but if it does, it will be added to the RC results list, and the non-RC 
+						## 		instance of it will not be added to the non-RC list... (no way to tell it's not the same one)						
 						j=i
+						## if this vote table does not immediate precede a result, 
+						##		scan forward until you find a result, and make it this vote table's result
 						while (res==''):
 							if j>=len(vote_tables):
 								break
