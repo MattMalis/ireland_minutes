@@ -38,8 +38,8 @@ def one_day_html_filenames(yr, mo, day):
 		print 'ERROR in one_day_html_filenames(%s, %s, %s)'%(yr,mo,day)
 		pass
 
-months = ['March', 'September']
-#months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September','October', 'November', 'December'] 
+#months = ['March', 'September']
+months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September','October', 'November', 'December'] 
 
 
 legis_names = []
@@ -130,23 +130,7 @@ def ta_or_nil(vote_table):
 			cur = cur.previousSibling
 			count +=1
 		
-		
-		
-		
-		
-	# 	
-# 		
-# for i in range(len(vt1)):
-# 	print 'starting on table #%s'%(i)
-# 	outcome = ta_or_nil(vt1[i])
-# 	if outcome=='NONE':
-# 		continue
-# 	else:
-# 		print vt1[i]
-# 	
-	
-	
-	
+
 	
 def get_legislator_names(vote_table):
 	tds = vote_table.find_all('td')
@@ -159,11 +143,16 @@ def get_legislator_names(vote_table):
 def get_one_RC_result(vote_table):
 	keywords = ['amendment', 'motion','question','declared', 'ordered']
 	cur = vote_table.nextSibling
+	count = 0
 	while(True):
 		try:
+			#print 'count: %s' %(count)
+			if count >10:
+				return ''
 			if cur is None:
 				return ''
 			if cur.name==None:
+				count+=1
 				cur = cur.nextSibling
  			elif cur.name=='table': 
  				## moving through siblings, if you hit a table before a result <p>, that means you started with a ta table
@@ -172,7 +161,13 @@ def get_one_RC_result(vote_table):
 			elif cur.name=='p' and len(cur.get_text())<100:
 				if any(k in cur.get_text().lower() for k in keywords):
 					return ascii_only(cur.get_text())
-			cur = cur.nextSibling
+				else:
+					count+=1
+					cur = cur.nextSibling
+			else:
+				#print 'cur.name: %s' %(cur.name)
+				count +=1
+				cur = cur.nextSibling
 		except:
 			if cur is None:
 				return ''
@@ -181,8 +176,8 @@ def get_one_RC_result(vote_table):
 
 
 ########## DOING THE WORK ########
-
-for yr in range(1924,2004): ## all files 1924-2004 appear to share same format
+for yr in range(1930,2004):
+#for yr in range(1924,2004): ## all files 1924-2004 appear to share same format
 #for yr in range(2003,2004):
 	if yr==1937:## no minutes found online for 1937
 		continue
@@ -202,16 +197,23 @@ for yr in range(1924,2004): ## all files 1924-2004 appear to share same format
 		###### F_NAME LOOP	
 			for f_name in day_file_names:
 				#print 'beginning file: %s' %(f_name)
-				page = open(base_path+str(yr)+'/'+mo+'/'+day+'/'+f_name)
-				soup = BS(page.read(), 'html.parser')
+				try:
+					page = open(base_path+str(yr)+'/'+mo+'/'+day+'/'+f_name)
+					soup = BS(page.read(), 'html.parser')
+				except:
+					print 'failed to make soup out of file: %s' %(f_name)
+					pass
 				try: ## EXTRACTING VOTE SUBJECT
 					subject = get_subject(soup) ## function defined above
 				except:
 					print 'ERROR: could not extract vote subject for file: %s' %(f_name)
 					subject = ''
 					pass
-			
-				vote_tables = find_vote_tables(soup)
+				try:
+					vote_tables = find_vote_tables(soup)
+				except:
+					print 'failed to find vote tables for file: %s' %(f_name)
+					pass
 				
 				this_file_RC_results = []	
 				
@@ -280,8 +282,12 @@ for yr in range(1924,2004): ## all files 1924-2004 appear to share same format
 				## RC results have been stored in this_file_RC_results
 				## finding all the <p> tags that meet certain criteria (below),
 				## 		that are not found in this_file_RC_results
-				all_p = soup.find_all('p')
-				all_p_not_RC = [p for p in all_p if p not in this_file_RC_results]
+				try:
+					all_p = soup.find_all('p')
+					all_p_not_RC = [p for p in all_p if p not in this_file_RC_results]
+				except:
+					print 'could not identify all_p_not_RC for file: %s' %(f_name)
+					pass
 				nonRC_results = []
 				for p in all_p_not_RC:
 					try:
