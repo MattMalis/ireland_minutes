@@ -63,17 +63,19 @@ def find_one_years_addresses(yr_address):
 		addresses_by_month[m] = this_months_addresses
 	return addresses_by_month
 
+
 ## creating a master dict with all individual date URLs for every year
 all_date_addresses = {}
 for yr in seanad_yr_addresses.keys():
 	try:
-		all_date_addresses[yr] = find_one_years_addresses(seanad_yr_addresses[yr])
+		all_date_addresses[yr] = find_one_years_addresses(seanad_yr_addresses[yr]) ## function defined above
 	except:
 		print "Error with find_one_years_addresses() for yr: %s" %(yr)
 		time.sleep(random.uniform(0,5))
 		pass
 
-
+### FINDING NUMBER OF PAGES FOR EACH DATE, appending to that date's list 
+###			(which contains the dat's page1 URL and is stored as a value in the all_date_addresses dict)
 for yr in all_date_addresses.keys():
 	for mo in all_date_addresses[yr].keys():
 		if all_date_addresses[yr][mo] is None:
@@ -84,14 +86,13 @@ for yr in all_date_addresses.keys():
 				date_page = urllib2.urlopen(date_url)
 				date_soup = BeautifulSoup(date_page.read(), "html.parser")
 				date_txt = str(date_soup)
+				## number of pages is always found after a </select> tag
 				select_index = date_txt.find('</select>')
-				#print "select_index: %s" %(select_index)
 				num_index = select_index + len('</select> of ')
-				#print "num_index: %s" %(num_index)
 				endex = date_txt[num_index:].find('\n')
-				#print "endex: %s" %(endex)
 				n_pages = date_txt[num_index:num_index+endex]
-				#print "n_pages: %s" %(n_pages)
+				## for each date, appending the num_pages to the end of a list which previously contained only the URL for the 
+				## 		first page of that date
 				all_date_addresses[yr][mo][d].append(n_pages)
 			except: 
 				print "Error getting page numbers for: %s, %s, %s" %(yr, mo, d)
@@ -112,7 +113,8 @@ for yr in all_date_addresses.keys():
 			try:
 				c_writer.writerow([yr, m, d, all_date_addresses[yr][m][d][0], all_date_addresses[yr][m][d][1] ])
 			except:
-				print "couldn't write: %s%s%s" %(yr,m,d)
+				print "ERROR: couldn't write: %s%s%s" %(yr,m,d)
+				pass
 				
 c.flush()
 c.close()
