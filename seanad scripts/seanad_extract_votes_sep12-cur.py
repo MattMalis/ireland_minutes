@@ -36,6 +36,7 @@ def one_day_html_filenames(yr, mo, day):
 
 months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September','October', 'November', 'December'] 
 
+## creating column headers for each legislator; looks like there won't be more than 55 for any single vote
 legis_names = []
 for i in range(55):
 	next_legis_name = "Legislator%s"%(i)
@@ -46,7 +47,6 @@ c_writer = csv.writer(c1, encoding = 'utf-8')
 colnames = ["Year", "Month", "Day", "Vote_Num", "File_Name","Subject", "Result","Ta/Nil","Tally"]
 colnames.extend(legis_names)
 c_writer.writerow(colnames)
-#c_writer.writerow(["Year", "Month", "Day", "Vote #", "Subject","Ta/Nil","Legislators"])
 
 cc = open('seanad_sep12-cur_nonRC.csv','wb')
 cc_writer = csv.writer(cc, encoding = 'utf-8')
@@ -55,6 +55,7 @@ cc_writer.writerow(["Year", "Month", "Day", "File_Name","Subject", "Non-RCV Resu
 
 ####### FUNCTION DEFINITIONS ###########
 
+## return only ascii characters; replace non-ascii chars with '_'
 def ascii_only(original_string): ## wish i knew a better way...
 	return ''.join([ltr for ltr in original_string if ord(ltr)<128])
 	
@@ -72,7 +73,7 @@ def get_subject(file_soup):
 	return subj
 	
 def get_RC_results(center_p_all):
-	## results of RC votes - always found in <p> tag with 'class="pcentre"' attribute
+	## results of RC votes - (almost) always found in <p> tag with 'class="pcentre"' attribute
 	rc_results = []
 	for p in center_p_all:
 		pt = ascii_only(p.get_text())
@@ -82,14 +83,17 @@ def get_RC_results(center_p_all):
 			if 'amendment' in pt.lower() or 'question' in pt.lower() or 'declared' in pt.lower():
 				rc_results.append(pt)
 	return rc_results			
-	
+
+## vote tables all have the attribute 'align = center', and are all preceded by a statement 
+## 		containing 'seanad', 'committee', and/or 'divided' (eg. "The Seanad divided:")
 def get_one_file_vote_tables(file_soup):
 		all_tables = file_soup.find_all('table',{'align': 'center'})
+		keywords = ['seanad','committee','divided']
 		vote_tables = []
 		for t in all_tables:
 			prev = t.previousSibling.previousSibling
 			prev_text = prev.get_text()
-			if 'seanad' in prev_text.lower() or 'committee' in prev_text.lower() or 'divided' in prev_text.lower():
+			if any(k in prev_text.lower() for k in keywords):
 				vote_tables.append(t)
 		return vote_tables
 						
