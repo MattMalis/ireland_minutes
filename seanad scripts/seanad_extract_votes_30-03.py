@@ -267,19 +267,7 @@ for yr in range(1930,2004):## all files 1930-2004 appear to share same format
 						if res!='':
 							this_file_RC_results.append(res)
 						
-							
-# 						j=i
-						## if this vote table does not immediate precede a result, 
-						##		scan forward until you find a result, and make it this vote table's result
-						# try:
-# 							while (res==''):
-# 								if j>=len(vote_tables):
-# 									break
-# 								res = get_one_RC_result(vote_tables[j])
-# 								j+=1
-# 						except:
-# 							print 'failed to get next vote result for table # %s for file: %s' %(i,f_name)
-# 							
+
 						names = [n for n in names if n!='' and n!='_']
 						
 					
