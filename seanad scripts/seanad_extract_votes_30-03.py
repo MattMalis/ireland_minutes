@@ -181,7 +181,8 @@ for yr in range(1930,2004):## all files 1930-2004 appear to share same format
 		if mo == '.DS_Store': # sometimes os.listdir() returns '.DS_Store' as the 0th item in the list...
 			continue
 		this_months_days = os.listdir(base_path+str(yr)+'/'+mo)
-		## this_months_days is a list of folder names, corresponding to days within a given month for which there are legislative minutes
+		## this_months_days is a list of folder names, corresponding to days within a given month for which 
+		## 			there are legislative minutes
 		for day in this_months_days:
 			if day == '.DS_Store': 
 				continue
@@ -203,14 +204,14 @@ for yr in range(1930,2004):## all files 1930-2004 appear to share same format
 					subject = ''
 					pass
 				try:
-					vote_tables = find_vote_tables(soup)
+					vote_tables = find_vote_tables(soup) ## function defined above
 				except:
 					print 'failed to find vote tables for file: %s' %(f_name)
 					pass
 				
 				this_file_RC_results = []	
 				try:
-					this_file_result_tds = catch_result_tds(soup)
+					this_file_result_tds = catch_result_tds(soup) ## function defined above
 				except:
 					print "failed to catch result_tds for file: %s" %(f_name)
 					this_file_result_tds = []
@@ -222,7 +223,7 @@ for yr in range(1930,2004):## all files 1930-2004 appear to share same format
 						
 						##workaround for the fact that some tables are split... (eg 'ta' and 'ta,continued')
 						try:
-							outcome = ta_or_nil(vote_tables[i])
+							outcome = ta_or_nil(vote_tables[i]) ## function defined above
 						except:
 							print 'failed to get outcome for table # %s for file: %s' %(i, f_name)
 							outcome==None
@@ -243,7 +244,8 @@ for yr in range(1930,2004):## all files 1930-2004 appear to share same format
 						
 						if outcome==next_outcome: #if there are two nil or two ta tables back-to-back
 							print 'hit a continued table in file: %s'%(f_name)	
-							# (ie if the second one is 'continued')... this does not seem to be substantively meaningful, just a formatting thing
+							# (ie if the second one is 'continued')... this does not seem to be substantively 
+							## 		meaningful, just a formatting thing
 							names.extend(get_legislator_names(vote_tables[i+1]))
 							i+=1 ## increment vote tables in the for loop 
 							## (don't want to treat back-to-back 'ta' tables like they're two separate votes)

@@ -7,14 +7,21 @@ import csv
 import re
 from bs4 import BeautifulSoup
 
+print 'starting'
 ## this is an exact copy of seanad_urls.py, just with 'seanad' replaced with 'dail'
 
 dail_yr_base_address = 'http://oireachtasdebates.oireachtas.ie/debates%20authoring/debateswebpack.nsf/datelist?readform&chamber=dail&year='
 
 dail_yr_addresses = {}
-for yr in range(1922,2017):
+## ran it first time from 1922-2017 (seanad starts at 1922), then realized dail starts at 1919, ran a second time for 1919-1922
+#for yr in range(1919,1922):
+#for yr in range(1922,2017):
+
+##to do it all at once:
+for yr in range(1919,2017):
 	dail_yr_addresses[yr] = dail_yr_base_address + str(yr)
-	
+
+print 'got the years'
 ## from main year page: all 'opendocument' strings are in a link to a new date's minutes
 ## also, looks like every month name appears exactly once (unless there are no minutes from that month, eg august sometimes)
 
@@ -35,6 +42,7 @@ months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'Augus
 ## returns:
 ##		dict whose keys are the dates (strings of format 'dd') for which there are legislative minutes,
 ##			and whose values are the URLs for a specific date's minutes
+print 'function1'
 def find_one_months_addresses(month, yr_text, base_address):
 	date_addresses = {}
 	m_index = yr_text.find(month)
@@ -54,6 +62,7 @@ def find_one_months_addresses(month, yr_text, base_address):
 ## 		keys: months
 ##		values: keys, representing dates for which there are minutes
 ##				values: individual date URLs
+print 'function2'
 def find_one_years_addresses(yr_address):
 	yr_page = urllib2.urlopen(yr_address)
 	yr_soup = BeautifulSoup(yr_page.read(), "html.parser")
@@ -67,15 +76,17 @@ def find_one_years_addresses(yr_address):
 ## creating a master dict with all individual date URLs for every year
 all_date_addresses = {}
 for yr in dail_yr_addresses.keys():
+	print 'pt1 yr: %s' %(yr)
 	try:
 		all_date_addresses[yr] = find_one_years_addresses(dail_yr_addresses[yr])
 	except:
 		print "Error with find_one_years_addresses() for yr: %s" %(yr)
 		time.sleep(random.uniform(0,5))
 		pass
-
+print 'finished find_one_year_addresses()'
 
 for yr in all_date_addresses.keys():
+	print 'starting with yr: %s' %(yr)
 	for mo in all_date_addresses[yr].keys():
 		if all_date_addresses[yr][mo] is None:
 			continue
@@ -101,7 +112,11 @@ for yr in all_date_addresses.keys():
 
 
 ## writing csv
-c = open('dail_single_date_urls.csv', 'wb')
+
+## patch-up for 1919-1922, after i already ran it with 1922-2017
+#c = open('dail_single_date_urls_earliest.csv', 'wb')
+#for full thing:
+c = open('dail_single_date_urls.csv','wb')
 c_writer = csv.writer(c)
 c_writer.writerow(["Year", "Month", "Day", "URL", "NumPages"])
 

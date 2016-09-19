@@ -67,10 +67,14 @@ for day in single_days[1:]: #row 0 is the column names
 	ticker+=1
 	if ticker%100==0:
 		print "downloading: %s" %(ticker)
-	day_path = '/Users/apple/Desktop/ireland-dail-minutes3/%s/%s/%s/'%(day[0],day[1],day[2]) ## this was the third run, didn't want files to overwrite
+	if int(day[-1])<1000:
+		continue
+	day_path = '/Users/apple/Desktop/ireland-dail-minutes-1000plus/%s/%s/%s/'%(day[0],day[1],day[2]) ## this was the third run, didn't want files to overwrite
 	if os.path.exists(day_path)==False:
 		os.makedirs(day_path)
 	for pp in range(1,int(day[-1])+1):
+		if pp<1000:
+			continue
 		try:
 			f_name = 'Ireland-dail-minutes-%s%s%s-p%s.html'%(day[0],day[1],day[2],pp)
 			p_address = same_date_next_page(day[3], pp, page_num_index_all_urls)

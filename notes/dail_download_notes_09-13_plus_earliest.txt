@@ -1,0 +1,70 @@
+DAIL DOWNLOAD NOTES 2009-2013
+(starting with single_days[7001:]
+
+Macintosh:Desktop apple$ python dail_download_all_minutes.py 
+ERROR DOWNLOADING 2009May06, page #23
+ERROR DOWNLOADING 2009June09, page #437
+ERROR DOWNLOADING 2009April28, page #185
+ERROR DOWNLOADING 2009April28, page #212
+downloading: 100
+ERROR DOWNLOADING 2010February03, page #75
+ERROR DOWNLOADING 2010May25, page #270
+ERROR DOWNLOADING 2010May25, page #293
+downloading: 200
+ERROR DOWNLOADING 2011October11, page #167
+ERROR DOWNLOADING 2011June01, page #44
+downloading: 300
+ERROR DOWNLOADING 2011July13, page #146
+ERROR DOWNLOADING 2012February28, page #314
+downloading: 400
+ERROR DOWNLOADING 2012June27, page #207
+ERROR DOWNLOADING 2012April26, page #33
+ERROR DOWNLOADING 2012April26, page #64
+ERROR DOWNLOADING 2013February05, page #61
+ERROR DOWNLOADING 2013February05, page #62
+downloading: 500
+ERROR DOWNLOADING 2013September18, page #58
+ERROR DOWNLOADING 2013September18, page #134
+
+stopped for some reason. no termination message, just sitting still.
+
+oh hm looks like it just went to sleep... though it never went to sleep before...
+hit ctrl+c, and it got prompted back into action
+
+^CERROR DOWNLOADING 2013July04, page #59
+^CERROR DOWNLOADING 2013July04, page #61
+ERROR DOWNLOADING 2014October03, page #22
+downloading: 600
+ERROR DOWNLOADING 2014June18, page #21
+ERROR DOWNLOADING 2014June18, page #76
+ERROR DOWNLOADING 2014July16, page #12
+ERROR DOWNLOADING 2014July16, page #13
+ERROR DOWNLOADING 2014July16, page #14
+ERROR DOWNLOADING 2014July16, page #15
+ERROR DOWNLOADING 2014July16, page #16
+ERROR DOWNLOADING 2014July16, page #17
+ERROR DOWNLOADING 2014July16, page #18
+ERROR DOWNLOADING 2014July16, page #19
+ERROR DOWNLOADING 2014July16, page #20
+ERROR DOWNLOADING 2014July16, page #21
+ERROR DOWNLOADING 2014July16, page #22
+ERROR DOWNLOADING 2014July16, page #23
+ERROR DOWNLOADING 2014July16, page #24
+ERROR DOWNLOADING 2014July16, page #25
+ERROR DOWNLOADING 2014July16, page #26
+downloading: 700
+downloading: 800
+ERROR DOWNLOADING 2016June29, page #13
+ERROR DOWNLOADING 2016June29, page #68
+
+FINITO
+
+FINALLY, 2008 (started recent batch in 2008, ended main batch in 2008, but some months got lost in between... restarted the whole year)
+
+ 
+Macintosh:ireland-dail-scripts-final apple$ python dail_download_2008_patchup.py 
+ERROR DOWNLOADING 2008May29, page #38
+ERROR DOWNLOADING 2008May29, page #91
+ERROR DOWNLOADING 2008November04, page #106
+ERROR DOWNLOADING 2008November04, page #158
+Macintosh:ireland-dail-scripts-final apple$ 

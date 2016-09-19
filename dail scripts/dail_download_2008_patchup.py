@@ -64,10 +64,12 @@ page_num_index_all_urls = day1_url.find('?opendocument') - 4
 
 ticker = 0
 for day in single_days[1:]: #row 0 is the column names
+	if str(day[0])!='2008':
+		continue
 	ticker+=1
 	if ticker%100==0:
 		print "downloading: %s" %(ticker)
-	day_path = '/Users/apple/Desktop/ireland-dail-minutes3/%s/%s/%s/'%(day[0],day[1],day[2]) ## this was the third run, didn't want files to overwrite
+	day_path = '/Users/apple/Desktop/ireland-dail-minutes-2008/%s/%s/%s/'%(day[0],day[1],day[2]) ## this was the third run, didn't want files to overwrite
 	if os.path.exists(day_path)==False:
 		os.makedirs(day_path)
 	for pp in range(1,int(day[-1])+1):
